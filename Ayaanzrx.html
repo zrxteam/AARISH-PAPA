@@ -1,188 +1,126 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prediction UI</title>
+    <title>TS Predictor V10</title>
     <style>
         body {
-            margin: 0;
-            background-color: black;
             font-family: Arial, sans-serif;
-            color: white;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        .linear2 {
-            background-color: black;
-            padding: 20px;
-            margin: 0 auto;
-            border: 2px solid red;
-            border-radius: 10px;
-            box-shadow: 0 0 15px red;
-            max-width: 500px;
+            margin: 0;
+            padding: 0;
             text-align: center;
-            z-index: 2;
-        }
-        .glowing-text {
-            color: red;
-            text-shadow: 0 0 10px red;
-        }
-        .list-view {
-            margin-top: 20px;
-            text-align: left;
-            padding: 10px;
-            border: 1px solid #444;
-            max-height: 200px;
-            overflow-y: auto;
-            background-color: #222;
-        }
-        button {
-            background-color: red;
+            background: url('https://wallpapercave.com/wp/wp14016731.jpg') no-repeat center center fixed;
+            background-size: cover;
             color: white;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            margin: 10px;
-            box-shadow: 0 0 10px red;
         }
-        button:hover {
-            background-color: darkred;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 18px;
+        }
+        .content {
+            margin-top: 50px;
+        }
+        .box {
+            margin: 20px auto;
+            width: 200px;
+            height: 100px;
+            background-color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 10px;
+        }
+        .btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: gray;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: darkgray;
+        }
+        .disabled {
+            background-color: darkgray;
+            cursor: not-allowed;
+        }
+        .stats {
+            margin-top: 20px;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
-    <canvas id="particles"></canvas>
-    <div class="linear2">
-        <h2 class="glowing-text">🔶 HYPER MOD VX1 🔶</h2>
-        <p id="textview1" class="glowing-text">Period: Loading...</p>
-        <p id="textview2" class="glowing-text">Timer: 00:00</p>
-        <hr style="border: 1px solid red;">
-        <p class="glowing-text">UPCOMING NUMBER -: <span id="upcoming-number">N/A</span></p>
-        <p class="glowing-text">UPCOMING SIZE -: <span id="upcoming-size">N/A</span></p>
-        <p class="glowing-text">UPCOMING COLOUR -: <span id="upcoming-color">N/A</span></p>
-        <hr style="border: 1px solid red;">
-        <p class="glowing-text">WIN CHANCE -: <span id="win-chance">N/A</span></p>
-        <button id="check-btn" onclick="checkResult()">CHECK RESULT</button>
-        <div class="list-view" id="history">
-            <p class="glowing-text">History:</p>
+    <div class="header">
+        <div>Main</div>
+        <div>Profile</div>
+    </div>
+    <div class="content">
+        <h1>TS PREDICTOR V10</h1>
+        <div class="box" id="resultBox">0</div>
+        <button class="btn" id="toggleButton" onclick="generateBiasedRandomNumber()">CHECK RESULT</button>
+
+        <div class="stats">
+            Next period in: <span id="waitTime">Ready</span>
         </div>
     </div>
 
     <script>
-        // Particle animation
-        const canvas = document.getElementById('particles');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        let isWaiting = false;
 
-        const particles = [];
-        const colors = ['#f44336', '#E57373'];
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.radius = Math.random() * 7 + 3;
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-                this.dx = Math.random() * 2 - 1;
-                this.dy = Math.random() * 2 - 1;
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-            update() {
-                this.x += this.dx;
-                this.y += this.dy;
-                if (this.x < 0 || this.x > canvas.width) this.dx *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.dy *= -1;
-                this.draw();
-            }
-        }
-
-        function initParticles() {
-            for (let i = 0; i < 30; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(particle => particle.update());
-            requestAnimationFrame(animateParticles);
-        }
-
-        initParticles();
-        animateParticles();
-
-        // Timer and Prediction Logic
-        let canCheckResult = true;
-        let previousPeriod = null;
-
-        function updateTimerAndPeriod() {
-            const now = new Date();
-            const seconds = now.getSeconds();
-            const remainingSeconds = 60 - seconds;
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-
-            // Calculate elapsed minutes since 5:29 AM
-            const elapsedMinutes = (hours * 60 + minutes) - (5 * 60 + 29);
-            const period = `100001${String(elapsedMinutes < 0 ? 0 : elapsedMinutes).padStart(4, '0')}`;
-            document.getElementById('textview1').innerText = `Period: ${period}`;
-            document.getElementById('textview2').innerText = `Timer: 00:${String(remainingSeconds).padStart(2, '0')}`;
-
-            // Reset button and period if the period changes
-            if (previousPeriod !== period) {
-                previousPeriod = period;
-                canCheckResult = true;
-                document.getElementById('history').innerHTML = '';
-            }
-        }
-
-        setInterval(updateTimerAndPeriod, 1000);
-
-        function predict() {
-            const number = Math.floor(Math.random() * 10);
-            const size = number <= 4 ? 'SMALL' : 'BIG';
-            const color = number % 2 === 0 ? 'RED 🔴' : 'GREEN 🟢';
-            const winChance = Math.floor(Math.random() * 100) + '%';
-
-            document.getElementById('upcoming-number').innerText = number;
-            document.getElementById('upcoming-size').innerText = size;
-            document.getElementById('upcoming-color').innerText = color;
-            document.getElementById('win-chance').innerText = winChance;
-
-            const history = document.getElementById('history');
-            const result = `Number: ${number}, Size: ${size}, Color: ${color}, Win: ${winChance}`;
-            const p = document.createElement('p');
-            p.innerText = result;
-            p.style.color = 'red';
-            history.appendChild(p);
-        }
-
-        function checkResult() {
-            if (!canCheckResult) {
-                alert('PLS WAIT FOR NEXT PERIOD');
+        function generateBiasedRandomNumber() {
+            if (isWaiting) {
+                alert("Please wait for the next period.");
                 return;
             }
-            canCheckResult = false;
-            predict();
+
+            const box = document.getElementById('resultBox');
+            const button = document.getElementById('toggleButton');
+
+            // Generate a weighted random number (70% chance for BIG)
+            const isBig = Math.random() < 0.7;
+            let randomNumber = isBig ? Math.floor(Math.random() * 5) + 5 : Math.floor(Math.random() * 5);
+            const resultText = randomNumber >= 5 ? "BIG" : "SMALL";
+
+            box.textContent = `${randomNumber} - ${resultText}`;
+
+            // Start wait time before next period
+            waitForNextPeriod();
+        }
+
+        function waitForNextPeriod() {
+            isWaiting = true;
+            const button = document.getElementById('toggleButton');
+            const waitTimeDisplay = document.getElementById('waitTime');
+            button.classList.add("disabled");
+            button.disabled = true;
+
+            let waitSeconds = 10;
+            waitTimeDisplay.textContent = `${waitSeconds}s`;
+
+            const countdown = setInterval(() => {
+                waitSeconds--;
+                waitTimeDisplay.textContent = `${waitSeconds}s`;
+                if (waitSeconds <= 0) {
+                    clearInterval(countdown);
+                    isWaiting = false;
+                    button.classList.remove("disabled");
+                    button.disabled = false;
+                    waitTimeDisplay.textContent = "Ready";
+                }
+            }, 1000);
         }
     </script>
 </body>
